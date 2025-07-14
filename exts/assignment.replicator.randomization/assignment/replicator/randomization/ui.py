@@ -1,14 +1,29 @@
 import omni.ui as ui
 from .functionalities import object_spawn
 
-
 #Ui tutorial :"https://github.com/NVIDIA-Omniverse/kit-extension-sample-ui-window/blob/main/exts/omni.example.ui_window/tutorial/tutorial.md"
+
 class SpawnControlsUI:
     def __init__(self):
         with ui.ScrollingFrame():
             with ui.VStack():
                 #object spawning controls
-                with ui.CollapsableFrame("Object Spawning Controls", opened=True):
+                self.object_spawning_controls()
+
+                #randomizing scale rotation position and color
+                self.randomization_setting()
+
+                #Light configuration
+                self.light_configuration()
+
+                #camera configuration
+                self.camera_configuration()
+
+                #Spawn Button
+                self.button_spawn()
+
+    def object_spawning_controls(self):
+         with ui.CollapsableFrame("Object Spawning Controls", opened=True):
                     with ui.VStack(spacing=4, padding=5):
                         with ui.HStack(height=12, spacing=6):
                             ui.Label("Cubes:", style={"font_size": 12, "min_width": 50})
@@ -28,102 +43,103 @@ class SpawnControlsUI:
                             ui.Label("Number Of Cylinders:", style={"font_size": 12, "min_width": 90})
                             self.cylinder_count = ui.IntField(width=50, height=20)
 
-                #randomizing scale rotation position and color
-                with ui.CollapsableFrame("Randomization Settings", opened=True):
-                    with ui.VStack( padding=5):
+    def randomization_setting(self):
+        with ui.CollapsableFrame("Randomization Settings", opened=True):
+             with ui.VStack( padding=5):
 
-                        with ui.HStack(spacing =6,height =28):
-                         ui.Label("Coordinates", style={"font_size": 12, "min_width": 30})  # empty label to align with input row label ("Position Min", etc.)
-                         ui.Label("X", width = 45,  style={"font_size": 12})
-                         ui.Label("Y", width = 45, style={"font_size": 12})
-                         ui.Label("Z", width = 45,style={"font_size": 12})
+                with ui.HStack(spacing =6,height =28):
+                    ui.Label("Coordinates", style={"font_size": 12, "min_width": 30})  # empty label to align with input row label ("Position Min", etc.)
+                    ui.Label("X", width = 45,  style={"font_size": 12})
+                    ui.Label("Y", width = 45, style={"font_size": 12})
+                    ui.Label("Z", width = 45,style={"font_size": 12})
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Position Min", style={"font_size": 12, "min_width": 50})
-                            self.pos_min_x = ui.FloatField(width=50, height=20)
-                            self.pos_min_y = ui.FloatField(width=50, height=20)
-                            self.pos_min_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Position Min", style={"font_size": 12, "min_width": 50})
+                    self.pos_min_x = ui.FloatField(width=50, height=20)
+                    self.pos_min_y = ui.FloatField(width=50, height=20)
+                    self.pos_min_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Position Max", style={"font_size": 12, "min_width": 90})
-                            self.pos_max_x = ui.FloatField(width=50, height=20)
-                            self.pos_max_y = ui.FloatField(width=50, height=20)
-                            self.pos_max_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Position Max", style={"font_size": 12, "min_width": 90})
+                    self.pos_max_x = ui.FloatField(width=50, height=20)
+                    self.pos_max_y = ui.FloatField(width=50, height=20)
+                    self.pos_max_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Rotation Min", style={"font_size": 12, "min_width": 90})
-                            self.rot_min_x = ui.FloatField(width=50, height=20)
-                            self.rot_min_y = ui.FloatField(width=50, height=20)
-                            self.rot_min_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Rotation Min", style={"font_size": 12, "min_width": 90})
+                    self.rot_min_x = ui.FloatField(width=50, height=20)
+                    self.rot_min_y = ui.FloatField(width=50, height=20)
+                    self.rot_min_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Rotation Max", style={"font_size": 12, "min_width": 90})
-                            self.rot_max_x = ui.FloatField(width=50, height=20)
-                            self.rot_max_y = ui.FloatField(width=50, height=20)
-                            self.rot_max_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Rotation Max", style={"font_size": 12, "min_width": 90})
+                    self.rot_max_x = ui.FloatField(width=50, height=20)
+                    self.rot_max_y = ui.FloatField(width=50, height=20)
+                    self.rot_max_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Scale Min", style={"font_size": 12, "min_width": 90})
-                            self.scal_min_x = ui.FloatField(width=50, height=20)
-                            self.scal_min_y = ui.FloatField(width=50, height=20)
-                            self.scal_min_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Scale Min", style={"font_size": 12, "min_width": 90})
+                    self.scal_min_x = ui.FloatField(width=50, height=20)
+                    self.scal_min_y = ui.FloatField(width=50, height=20)
+                    self.scal_min_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Scale Max", style={"font_size": 12, "min_width": 90})
-                            self.scal_max_x = ui.FloatField(width=50, height=20)
-                            self.scal_max_y = ui.FloatField(width=50, height=20)
-                            self.scal_max_z = ui.FloatField(width=50, height=20)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Scale Max", style={"font_size": 12, "min_width": 90})
+                    self.scal_max_x = ui.FloatField(width=50, height=20)
+                    self.scal_max_y = ui.FloatField(width=50, height=20)
+                    self.scal_max_z = ui.FloatField(width=50, height=20)
 
-                        with ui.HStack(height=28, spacing=6):
-                            ui.Label("Random Color Association:", style={"font_size": 12})
-                            self.color_checkbox = ui.CheckBox()
+                with ui.HStack(height=28, spacing=6):
+                    ui.Label("Random Color Association:", style={"font_size": 12})
+                    self.color_checkbox = ui.CheckBox()
 
-                        with ui.HStack(height =28, spacing=6):
-                            ui.Label("Add Random Material: ", style ={"font_size": 12})
-                            self.material_checkbox = ui.CheckBox()
-                            
+                with ui.HStack(height =28, spacing=6):
+                    ui.Label("Add Random Material: ", style ={"font_size": 12})
+                    self.material_checkbox = ui.CheckBox()
 
-                #Light configuration
-                with ui.CollapsableFrame("Lighting Configuration", opened=True):
-                    with ui.VStack(padding=5):
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Number Of Lights", style={"font_size": 12, "min_width": 30})
-                            self.light_num = ui.IntField(height=20, width=80)
+    def light_configuration(self):
+        with ui.CollapsableFrame("Lighting Configuration", opened=True):
+            with ui.VStack(padding=5):
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Number Of Lights", style={"font_size": 12, "min_width": 30})
+                    self.light_num = ui.IntField(height=20, width=80)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Intensity Min", style={"font_size": 12, "min_width": 30})
-                            self.intensity_min = ui.FloatField(height=20, width=80)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Intensity Min", style={"font_size": 12, "min_width": 30})
+                    self.intensity_min = ui.FloatField(height=20, width=80)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Intensity Max", style={"font_size": 12, "min_width": 30})
-                            self.intensity_max = ui.FloatField(height=20, width=80)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Intensity Max", style={"font_size": 12, "min_width": 30})
+                    self.intensity_max = ui.FloatField(height=20, width=80)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Temperature", style={"font_size": 12, "min_width": 30})
-                            self.temp = ui.FloatField(height=20, width=80)
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Temperature", style={"font_size": 12, "min_width": 30})
+                    self.temp = ui.FloatField(height=20, width=80)
 
-                        with ui.HStack(spacing=6, height=28):
-                            ui.Label("Light Type", style={"font_size": 12, "min_width": 30})
-                            self.light_options =["distant", "Sphere", "Dome"]
-                            self.combo_lights = ui.ComboBox(0, *self.light_options, width =80)
-                            #reference for combobox : "https://github.com/mati-nvidia/developer-office-hours/blob/main/exts/maticodes.doh_2022_09_23/scripts/combobox_selected_item.py"
+                with ui.HStack(spacing=6, height=28):
+                    ui.Label("Light Type", style={"font_size": 12, "min_width": 30})
+                    self.light_options =["distant", "Sphere", "Dome"]
+                    self.combo_lights = ui.ComboBox(0, *self.light_options, width =80)
+                    #reference for combobox : "https://github.com/mati-nvidia/developer-office-hours/blob/main/exts/maticodes.doh_2022_09_23/scripts/combobox_selected_item.py"
 
-            #camera configuration
-                with ui.CollapsableFrame("Camera Configuration", opened = True):
-                    with ui.VStack(spacing=4, padding=5):
-                            with ui.HStack(spacing =6, height =28):
-                                ui.Label("Number of Cameras:", style={"font_size": 12, "min_width": 50})
-                                self.cam_numb= ui.IntField(width=50, height=20)
-                            with ui.HStack(spacing =6, height = 28):
-                                ui.Label("Scatter Mode:", style={"font_size": 12, "min_width": 90})
-                                self.scatter_checkbox = ui.CheckBox()
-                                ui.Label("Plane To Scatter On:", style={"font_size": 12, "min_width": 90})
-                                self.plane_scatter = ui.StringField()
+    def camera_configuration(self): 
+        with ui.CollapsableFrame("Camera Configuration", opened = True):
+            with ui.VStack(spacing=4, padding=5):
+                    with ui.HStack(spacing =6, height =28):
+                        ui.Label("Number of Cameras:", style={"font_size": 12, "min_width": 50})
+                        self.cam_numb= ui.IntField(width=50, height=20)
+                    with ui.HStack(spacing =6, height = 28):
+                        ui.Label("Scatter Mode:", style={"font_size": 12, "min_width": 90})
+                        self.scatter_checkbox = ui.CheckBox()
+                        ui.Label("Plane To Scatter On:", style={"font_size": 12, "min_width": 90})
+                        self.plane_scatter = ui.StringField()
 
-                #Button
-                with ui.HStack(height=30, padding=10):
-                    self.button = ui.Button("Spawn", clicked_fn=self.build_scene)
-                  
+    def button_spawn(self):
+        with ui.HStack(height=30, padding=10):
+            self.button = ui.Button("Spawn", clicked_fn=self.build_scene)
+
+
+
     def build_scene(self):
         object_settings = self.get_object_settings()
         transform_settings = self.get_transform_settings()
