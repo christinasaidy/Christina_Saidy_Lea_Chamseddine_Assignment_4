@@ -1,6 +1,8 @@
 import omni.replicator.core as rep
 import random 
 from assignment.replicator.randomization.custom_writer import WorkerWriter
+from pxr import Gf
+import omni.usd
 
 def object_spawn(spawn_cubes_bool: bool, spawn_spheres_bool :bool, spawn_cylinders_bool: bool, cube_count: int, 
                 sphere_count: int, cylinder_count: int, spawn_colors_bool: bool, position_min :float, position_max: float, 
@@ -53,6 +55,7 @@ def spawn_cylinders(count):
 def add_randomization(position_min, position_max, rotation_min, rotation_max, scale_min, scale_max, spawn_colors_bool):
 
     shapes = rep.get.prims(semantics=[('class', 'cube'), ('class', 'sphere'), ('class', 'cylinder')])
+    print(shapes)
     def randomize_position():
         with shapes:
             rep.modify.pose(
@@ -121,32 +124,37 @@ def add_cameras(camera_number, scatter_mode):
         cameras.append(cam)
 
     with rep.trigger.on_frame(num_frames=10):
-        for cam in cameras:
-            # if scatter_mode:
+        for cam in cameras: #scattering code is commented out because it makes isaac crash 
+            # if scatter_mode: #
             #     with cam:
             #         rep.randomizer.scatter_2d(random_plane, check_for_collisions=True)
             # else:
             with cam:
                     rep.modify.pose(
                         position=rep.distribution.uniform((-20, 10, -20), (20, 20, 30)))
-    renders = [rep.create.render_product(cam, (1280, 720)) for cam in cameras]
-
-    #look at objects
+                    
+#look at object (attempt)
     # shapes = rep.get.prims(semantics=[('class', 'cube'), ('class', 'sphere'), ('class', 'cylinder')])
-    # for cam in cameras:
-    #     shape_to_look_at = random.choice(shapes)
-    #     shape_position = rep.
-    #     with cam:
-    #         rep.modify.pose(look_at= )
+    # shape_to_look_at = random.choice(shapes)
+    # shape_position = omni.usd.get_world_transform_matrix(shape_to_look_at).ExtractTranslation() 
+    # print("SHAPE", shape_position)
 
+    for cam in cameras:
+    
+        with rep.trigger.on_frame(num_frames=10):
+            with cam:
+                rep.modify.pose(look_at=(1,1,1))
+                #rep.modify.pose(look_at=(shape_position))
 
+    renders = [rep.create.render_product(cam, (1280, 720)) for cam in cameras]
     return renders
+        
         
 def add_writer(writer_type, directory, frame_number,output_rgb, output_bounding_box, renders):
     if writer_type =='KittiWriter':
         writer = rep.WriterRegistry.get(writer_type)
         writer.initialize(output_dir=directory,bbox_height_threshold=5,
-        fully_visible_threshold=0.75, omit_semantic_type=True)
+        fully_visible_threshold=0.75, omit_semantic_type=True, num_frames = frame_number)
         writer.attach(renders)
 
     if writer_type == 'WorkerWriter':
