@@ -1,10 +1,14 @@
 import omni.replicator.core as rep
 import random 
+from assignment.replicator.randomization.custom_writer import WorkerWriter
 
-def object_spawn(spawn_cubes_bool: bool, spawn_spheres_bool :bool, spawn_cylinders_bool: bool, cube_count: int, sphere_count: int, cylinder_count: int, 
-                spawn_colors_bool: bool, position_min :float, position_max: float, rotation_min: float,rotation_max,scale_min :float,scale_max:float,
-                number_lights: int, minimum_intensity: float, maximum_intensity:float, temperature: float, type_light: str, has_material: bool,
-                camera_number: int,scatter_mode : bool,plane: str):
+def object_spawn(spawn_cubes_bool: bool, spawn_spheres_bool :bool, spawn_cylinders_bool: bool, cube_count: int, 
+                sphere_count: int, cylinder_count: int, spawn_colors_bool: bool, position_min :float, position_max: float, 
+                rotation_min: float,rotation_max,scale_min :float,scale_max:float, number_lights: int, minimum_intensity: float,
+                maximum_intensity:float, temperature: float, type_light: str, has_material: bool, camera_number: int,
+                scatter_mode : bool, writer_type: str, directory: str, frame_number: int,
+                output_rgb: bool, output_bounding_box: bool):
+    
     with rep.new_layer():
         if spawn_cubes_bool:
             spawn_cubes(cube_count)
@@ -21,9 +25,15 @@ def object_spawn(spawn_cubes_bool: bool, spawn_spheres_bool :bool, spawn_cylinde
 
         if has_material:
             add_material()
+    
+        renders =add_cameras(camera_number, scatter_mode)
 
-        add_cameras(camera_number, scatter_mode, plane)
+        add_writer(writer_type, directory, frame_number,output_rgb, output_bounding_box, renders)
+         
+
     rep.orchestrator.run()  
+
+
 
 def spawn_cubes(count):
     for i in range(count):
@@ -57,12 +67,12 @@ def add_randomization(position_min, position_max, rotation_min, rotation_max, sc
         return shapes.node
 
     rep.randomizer.register(randomize_position)
-    with rep.trigger.on_frame(max_execs=30): #max_execs same as num_frames which will soon be deprecated so debugger said use this
+    with rep.trigger.on_frame(max_execs=10): 
         rep.randomizer.randomize_position()
 
     if spawn_colors_bool:
         rep.randomizer.register(randomize_color)
-        with rep.trigger.on_frame(max_execs=30):
+        with rep.trigger.on_frame(max_execs=10):
             rep.randomizer.randomize_color()
 
 def add_light(number_lights, minimum_intensity, maximum_intensity, temperature, type_light):
@@ -82,7 +92,7 @@ def add_light(number_lights, minimum_intensity, maximum_intensity, temperature, 
     rep.randomizer.register(get_lights)
 
     with rep.trigger.on_frame(num_frames=10):
-        rep.randomizer.get_lights(10)
+        rep.randomizer.get_lights(number_lights)
 
 def add_material():
     shapes = rep.get.prims(semantics=[('class', 'cube'), ('class', 'sphere'), ('class', 'cylinder')])
@@ -93,30 +103,61 @@ def add_material():
         return shapes.node
     
     rep.randomizer.register(get_shapes)
-    with rep.trigger.on_frame(num_frames =100):
+    with rep.trigger.on_frame(num_frames =10):
         rep.randomizer.get_shapes()
 
-def add_cameras(camera_number, scatter_mode, plane_name):
-    cameras = []
+def add_cameras(camera_number, scatter_mode):
 
+    # random_plane = rep.create.plane(position=rep.distribution.uniform((-20,0,-20),(20,20,20)),scale=(2,2,0.1))
+    
+    cameras = []
     for i in range(camera_number):
-        position = random.choice([
-            rep.distribution.uniform((-500, 100, -500), (-300, 550, -300)),
-            rep.distribution.uniform((300, 100, 300), (500, 550, 500)),
-        ])
-        camera = rep.create.camera(
-            position=position,
-            focus_distance=rep.distribution.normal(400.0, 100),
+        cam = rep.create.camera(
+            focus_distance=rep.distribution.normal(50, 150),
             f_stop=1.8,
             focal_length=rep.distribution.uniform(2, 10),
-            horizontal_aperture=10
-        )
-        cameras.append(camera)
+            horizontal_aperture=10,
+            look_at=(0, 0, 0))
+        cameras.append(cam)
 
-    # if scatter_mode:
-    #     rep.randomizer.scatter_2d(objects=cameras, surface=plane_name,check_for_collisions=True)
-    # renders = [rep.create.render_product(cam, (1920, 1080)) for cam in cameras]
-    # return renders
+    with rep.trigger.on_frame(num_frames=10):
+        for cam in cameras:
+            # if scatter_mode:
+            #     with cam:
+            #         rep.randomizer.scatter_2d(random_plane, check_for_collisions=True)
+            # else:
+            with cam:
+                    rep.modify.pose(
+                        position=rep.distribution.uniform((-20, 10, -20), (20, 20, 30)))
+    renders = [rep.create.render_product(cam, (1280, 720)) for cam in cameras]
+
+    #look at objects
+    # shapes = rep.get.prims(semantics=[('class', 'cube'), ('class', 'sphere'), ('class', 'cylinder')])
+    # for cam in cameras:
+    #     shape_to_look_at = random.choice(shapes)
+    #     shape_position = rep.
+    #     with cam:
+    #         rep.modify.pose(look_at= )
 
 
+    return renders
         
+def add_writer(writer_type, directory, frame_number,output_rgb, output_bounding_box, renders):
+    if writer_type =='KittiWriter':
+        writer = rep.WriterRegistry.get(writer_type)
+        writer.initialize(output_dir=directory,bbox_height_threshold=5,
+        fully_visible_threshold=0.75, omit_semantic_type=True)
+        writer.attach(renders)
+
+    if writer_type == 'WorkerWriter':
+        writer = WorkerWriter(output_dir=directory,
+                              rgb=output_rgb,
+                              bounding_box_2d_tight=output_bounding_box)
+        writer.attach(renders)
+
+#basic writer
+    rep.WriterRegistry.register(WorkerWriter)
+    writer = rep.WriterRegistry.get(writer_type)
+    writer.initialize(output_dir= directory, rgb= output_rgb, bounding_box_2d_tight=output_bounding_box)
+    writer.attach(renders)
+    
